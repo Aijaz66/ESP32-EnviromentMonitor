@@ -81,6 +81,7 @@ app.get('/sensor-data', async (req, res) => {
 
 // —— OTA proxy (unchanged) ——
 const upload = multer({ dest: path.join(__dirname, 'uploads') })
+app.options('/ota-upload', cors()) 
 app.post('/ota-upload', upload.single('firmware'), async (req, res) => {
   const espIp = req.body.espIp
   if (!espIp || !req.file) {
