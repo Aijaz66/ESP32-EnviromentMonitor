@@ -1,59 +1,78 @@
-// index.js
-const express  = require('express')
-const cors     = require('cors')
-const multer   = require('multer')
-const axios    = require('axios')
-const fs       = require('fs')
-const path     = require('path')
+const express = require('express')
+const cors = require('cors')
+const multer = require('multer')
+const axios = require('axios')
+const fs = require('fs')
+const path = require('path')
 const FormData = require('form-data')
-const sqlite3  = require('sqlite3').verbose()
+const { Pool } = require('pg') // Replaced sqlite3 with pg
 
 const app = express()
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json())
 
-// —– SQLite setup —–
-const db = new sqlite3.Database(path.join(__dirname,'sensorData.db'), err => {
-  if (err) throw err
+// —— Neon PostgreSQL setup ——
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // Required for Neon
 })
-db.run(`
-  CREATE TABLE IF NOT EXISTS SensorData (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    temperature REAL NOT NULL,
-    humidity    REAL NOT NULL,
-    timestamp   DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`)
 
-// —– Sensor POST (ESP → this server) —–
-app.post('/sensor', (req, res) => {
+// Initialize table (runs once on server start)
+async function initDB() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS SensorData (
+        id SERIAL PRIMARY KEY,
+        temperature REAL NOT NULL,
+        humidity REAL NOT NULL,
+        timestamp TIMESTAMP DEFAULT NOW()
+      )
+    `)
+    console.log('Neon DB connected and table verified')
+  } catch (err) {
+    console.error('DB initialization failed:', err)
+    process.exit(1)
+  }
+}
+initDB()
+
+// —— Sensor POST (ESP → this server) ——
+app.post('/sensor', async (req, res) => {
   const { temperature, humidity } = req.body
+  
   if (typeof temperature !== 'number' || typeof humidity !== 'number') {
     return res.status(400).json({ error: 'temperature & humidity must be numbers' })
   }
-  const stmt = db.prepare('INSERT INTO SensorData(temperature,humidity) VALUES(?,?)')
-  stmt.run(temperature, humidity, err => {
-    if (err) return res.status(500).json({ error: 'db insert failed' })
+
+  try {
+    await pool.query(
+      'INSERT INTO SensorData(temperature, humidity) VALUES($1, $2)',
+      [temperature, humidity]
+    )
     res.json({ status: 'ok' })
-  })
-  stmt.finalize()
+  } catch (err) {
+    console.error('DB insert error:', err)
+    res.status(500).json({ error: 'db insert failed' })
+  }
 })
 
-// —– Fetch recent readings for your dashboard —–
-app.get('/sensor-data', (req, res) => {
-  db.all(
-    'SELECT * FROM SensorData ORDER BY timestamp DESC LIMIT 6',
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: 'db query failed' })
-      res.json(rows)
-    }
-  )
+// —— Fetch recent readings ——
+app.get('/sensor-data', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM SensorData ORDER BY timestamp DESC LIMIT 6'
+    )
+    res.json(result.rows)
+  } catch (err) {
+    console.error('DB query error:', err)
+    res.status(500).json({ error: 'db query failed' })
+  }
 })
 
-// —– OTA proxy —–
-const upload = multer({ dest: path.join(__dirname,'uploads') })
+// —— OTA proxy (unchanged) ——
+const upload = multer({ dest: path.join(__dirname, 'uploads') })
 app.post('/ota-upload', upload.single('firmware'), async (req, res) => {
   const espIp = req.body.espIp
   if (!espIp || !req.file) {
@@ -64,16 +83,16 @@ app.post('/ota-upload', upload.single('firmware'), async (req, res) => {
   const form = new FormData()
   form.append(
     'firmware',
-     fs.createReadStream(req.file.path),
-     req.file.originalname
+    fs.createReadStream(req.file.path),
+    req.file.originalname
   )
 
   try {
     await axios.post(otaUrl, form, {
       headers: form.getHeaders(),
       maxContentLength: Infinity,
-      maxBodyLength:    Infinity,
-      timeout:          120000
+      maxBodyLength: Infinity,
+      timeout: 120000
     })
     fs.unlinkSync(req.file.path)
     res.json({ status: 'ota started' })
@@ -83,9 +102,11 @@ app.post('/ota-upload', upload.single('firmware'), async (req, res) => {
   }
 })
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Listening on port ${PORT}`)
-})
+// Basic route
 app.get('/', (req, res) => {
-  res.send('Backend is running!');
-});
+  res.send('Backend is running with Neon PostgreSQL!')
+})
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`)
+})
