@@ -86,3 +86,6 @@ app.post('/ota-upload', upload.single('firmware'), async (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Listening on port ${PORT}`)
 })
+app.get('/', (req, res) => {
+  res.send('Backend is running!');
+});
