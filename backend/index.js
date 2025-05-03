@@ -10,7 +10,15 @@ const { Pool } = require('pg') // Replaced sqlite3 with pg
 const app = express()
 const PORT = process.env.PORT || 3000
 
-app.use(cors())
+app.use(cors({
+  origin: [
+    'https://esp-32-enviroment-monitor-frontend.vercel.app', // Your frontend URL
+    'http://192.168.100.101' // ESP32's local IP (for direct debugging)
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json())
 
 // —— Neon PostgreSQL setup ——
