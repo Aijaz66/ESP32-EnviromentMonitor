@@ -16,7 +16,7 @@ function WeatherDataDisplay() {
     setLoading(true);
     try {
       console.log("Fetching data from backend...");
-      const response = await axios.get("http://localhost:3000/sensor-data");
+      const response = await axios.get("https://esp-32-enviroment-monitor-backend1.vercel.app/sensor-data");
       console.log("Data fetched:", response.data);
       // Limit the data to only the six most recent records
       setWeatherData(response.data.slice(0, 6));
