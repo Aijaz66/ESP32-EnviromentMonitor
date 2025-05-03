@@ -83,7 +83,7 @@ app.get('/sensor-data', async (req, res) => {
 const upload = multer({ dest: path.join(__dirname, 'uploads') })
 app.options('/ota-upload', cors()) 
 app.post('/ota-upload', cors(), upload.single('firmware'), async (req, res) => {
-  const espIp = 192.168.100.101
+  const espIp = req.body.espIp
   if (!espIp || !req.file) {
     return res.status(400).json({ error: 'espIp & firmware file required' })
   }
