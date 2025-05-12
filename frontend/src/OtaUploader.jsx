@@ -16,15 +16,17 @@ const OtaUploader = ({ isOpen, onClose, darkMode }) => {
     }
 
     const form = new FormData();
-    form.append("update", binFile, binFile.name);
+    form.append("firmware", binFile);  // Changed from "update" to "firmware" to match backend
+    form.append("espIp", espIp);  // Added ESP IP to form data
 
     try {
       setUploading(true);
       setStatus({ msg: "Starting upload…", type: "info" });
       setProgress(0);
 
+      // Changed to use your backend endpoint instead of direct ESP32 connection
       await axios.post(
-        `http://${espIp}/update`,
+        "https://esp-32-enviroment-monitor-backend1.vercel.app/ota-upload",
         form,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -40,7 +42,7 @@ const OtaUploader = ({ isOpen, onClose, darkMode }) => {
       setStatus({ msg: "Upload complete! ESP will reboot.", type: "success" });
     } catch (err) {
       console.error(err);
-      const errMsg = err.response?.data || err.message;
+      const errMsg = err.response?.data?.error || err.message;
       setStatus({ msg: `Upload failed: ${errMsg}`, type: "error" });
     } finally {
       setUploading(false);
