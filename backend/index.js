@@ -80,7 +80,13 @@ app.get('/sensor-data', async (req, res) => {
 })
 
 // —— OTA proxy (unchanged) ——
-const upload = multer({ dest: path.join(__dirname, 'uploads') })
+const upload = multer({ 
+  dest: '/tmp/uploads',  // Vercel allows writes to /tmp
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 1
+  }
+});
 app.options('/ota-upload', cors()) 
 app.post('/ota-upload', cors(), upload.single('firmware'), async (req, res) => {
   const espIp = req.body.espIp;
@@ -103,7 +109,8 @@ app.post('/ota-upload', cors(), upload.single('firmware'), async (req, res) => {
       maxBodyLength: Infinity,
       timeout: 120000
     })
-    fs.unlinkSync(req.file.path)
+    // After successful/failed upload:
+    fs.unlinkSync(`/tmp/uploads/${req.file.filename}`);
     res.json({ status: 'ota started' })
   } catch (err) {
     fs.unlinkSync(req.file.path)
