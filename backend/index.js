@@ -88,7 +88,7 @@ app.post('/ota-upload', cors(), upload.single('firmware'), async (req, res) => {
     return res.status(400).json({ error: 'espIp & firmware file required' })
   }
 
-  const otaUrl = 'https://e420-39-34-133-148.ngrok-free.app/update'
+  const otaUrl = 'https://e420-39-34-133-148.ngrok-free.app/update';
   const form = new FormData()
   form.append(
     'firmware',
