@@ -12,7 +12,7 @@ const AnalyticsPage = ({ darkMode }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:3000/sensor-data?range=${timeRange}`);
+      const response = await axios.get(`http://esp-32-enviroment-monitor-backend1.vercel.app/sensor-data?range=${timeRange}`);
       setSensorData(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
