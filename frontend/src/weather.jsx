@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import { RefreshCw, ThermometerIcon, Droplets, Clock, Menu, X, Home, BarChart2, Settings, Info, MapPin, Sun, Moon, Upload } from "lucide-react";
 import OtaUploader from "./OtaUploader"; // Import the OTA uploader component
 
@@ -135,10 +136,10 @@ function WeatherDataDisplay() {
               <Upload className="h-5 w-5 mr-1" />
               Firmware
             </button>
-            <a href="#" className={`flex items-center ${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+             <Link to="/analytics" className={`flex items-center ${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
               <BarChart2 className="h-5 w-5 mr-1" />
               Analytics
-            </a>
+            </Link>
             <a href="#" className={`flex items-center ${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
               <Settings className="h-5 w-5 mr-1" />
               Settings
@@ -184,12 +185,12 @@ function WeatherDataDisplay() {
                 Firmware
               </div>
             </button>
-            <a href="#" className={`block py-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+           <Link to="/analytics" className={`block py-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               <div className="flex items-center">
                 <BarChart2 className="h-5 w-5 mr-2" />
                 Analytics
               </div>
-            </a>
+            </Link>
             <a href="#" className={`block py-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               <div className="flex items-center">
                 <Settings className="h-5 w-5 mr-2" />
