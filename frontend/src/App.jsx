@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import WeatherDataDisplay from "./weather"
+import AnalyticsPage from "./AnalyticsPage";
 
 function App() {
   return (
@@ -8,7 +9,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<WeatherDataDisplay />} />
-          {/* Add more routes here as needed */}
+          <Route path="/analytics" element={<AnalyticsPage />} />
         </Routes>
       </div>
     </Router>
